@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>My Bio</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  overflow: hidden;
+  position: relative;
+  background: black;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: url('background.jpg') center/cover no-repeat;
+  z-index: -1;
+}
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+body { animation: fade 0.8s ease; }
+.card {
+  width: 340px;
+  padding: 30px;
+  border-radius: 25px;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  text-align: center;
+  z-index: 1;
+}
+.avatar-box {
+  width: 130px;
+  height: 130px;
+  margin: 0 auto 15px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 0 20px rgba(0,0,0,0.15);
+  animation: avatarGlow 4s infinite ease-in-out;
+}
+@keyframes avatarGlow {
+  0% { box-shadow: 0 0 15px rgba(0,0,0,0.15); }
+  50% { box-shadow: 0 0 35px rgba(0,0,0,0.25); }
+  100% { box-shadow: 0 0 15px rgba(0,0,0,0.15); }
+}
+.avatar-box video,
+.avatar-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.name { font-size: 26px; font-weight: 700; }
+.quote { font-size: 18px; color: #555; margin-bottom: 15px; font-style: italic; }
+.subtitle { color: gray; margin-bottom: 20px; }
+.socials {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+.socials a {
+  width: 45px;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #f1f1f1;
+  color: black;
+  font-size: 20px;
+  text-decoration: none;
+  transition: 0.3s;
+}
+.socials a:hover { transform: scale(1.15); background: #e6e6e6; }
+.link {
+  display: block;
+  padding: 14px;
+  margin: 10px 0;
+  border-radius: 14px;
+  background: #f7f7f7;
+  text-decoration: none;
+  color: black;
+  font-weight: 600;
+  transition: 0.3s;
+}
+.link:hover { background: #ececec; transform: translateY(-2px); }
+.player {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.player button {
+  background: #f1f1f1;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+.player button:hover { background: #e6e6e6; }
+.progress-container { width: 100%; height: 6px; background: #eee; border-radius: 3px; cursor: pointer; }
+.progress { height: 100%; width: 0%; background: #333; border-radius: 3px; transition: width 0.1s linear; }
+.time { font-size: 14px; color: gray; }
+#snowCanvas { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+</style>
+</head>
+<body>
+
+<canvas id="snowCanvas"></canvas>
+
+<div class="card">
+  <div class="avatar-box">
+    <video autoplay muted loop playsinline>
+      <source src="avatar.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <div class="name">Mefedronxdw</div>
+  <div class="quote">悪人正機。</div>
+  <div class="subtitle">my links ✨</div>
+
+  <div class="socials">
+    <a href="https://www.tiktok.com/@mefedronxdw" target="_blank"><i class="fab fa-tiktok"></i></a>
+    <a href="https://discord.com/users/mefedronxdw" target="_blank"><i class="fab fa-discord"></i></a>
+  </div>
+
+  <a class="link" href="https://www.tiktok.com/@mefedronxdw" target="_blank">TikTok</a>
+  <a class="link" href="https://discord.com/users/mefedronxdw" target="_blank">Discord</a>
+
+  <div class="player">
+    <button id="playPause"><i class="fas fa-play"></i> Play</button>
+    <div class="progress-container" id="progressContainer">
+      <div class="progress" id="progress"></div>
+    </div>
+    <div class="time"><span id="current">0:00</span> / <span id="duration">0:00</span></div>
+    <audio id="audio">
+      <source src="music.mp3" type="audio/mpeg">
+    </audio>
+  </div>
+</div>
+
+<script>
+const audio=document.getElementById('audio');
+const playBtn=document.getElementById('playPause');
+const progress=document.getElementById('progress');
+const progressContainer=document.getElementById('progressContainer');
+const currentTimeEl=document.getElementById('current');
+const durationEl=document.getElementById('duration');
+playBtn.addEventListener('click',()=>{
+  if(audio.paused){ audio.play(); playBtn.innerHTML='<i class="fas fa-pause"></i> Pause'; }
+  else{ audio.pause(); playBtn.innerHTML='<i class="fas fa-play"></i> Play'; }
+});
+audio.addEventListener('loadedmetadata',()=>{durationEl.textContent=formatTime(audio.duration);});
+audio.addEventListener('timeupdate',()=>{progress.style.width=`${(audio.currentTime/audio.duration)*100}%`;currentTimeEl.textContent=formatTime(audio.currentTime);});
+progressContainer.addEventListener('click',(e)=>{ const width=progressContainer.clientWidth; audio.currentTime=(e.offsetX/width)*audio.duration; });
+function formatTime(sec){ const minutes=Math.floor(sec/60); const seconds=Math.floor(sec%60); return `${minutes}:${seconds<10?'0'+seconds:seconds}`; }
+
+const canvas=document.getElementById('snowCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=window.innerWidth; canvas.height=window.innerHeight;}
+resizeCanvas(); window.addEventListener('resize',resizeCanvas);
+const flakes=[]; for(let i=0;i<60;i++){ flakes.push({x:Math.random()*canvas.width, y:Math.random()*canvas.height, r:Math.random()*3+1, d:Math.random()*2}); }
+function drawSnow(){ ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.beginPath(); flakes.forEach(f=>{ctx.moveTo(f.x,f.y); ctx.arc(f.x,f.y,f.r,0,Math.PI*2,true);}); ctx.fill(); flakes.forEach(f=>{ f.y+=Math.cos(f.d)+1+f.r/2; f.x+=Math.sin(f.d)*0.5; if(f.y>canvas.height){ f.x=Math.random()*canvas.width; f.y=0; }}); requestAnimationFrame(drawSnow);}
+drawSnow();
+</script>
+
+</body>
+</html>
